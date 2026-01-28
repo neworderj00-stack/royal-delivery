@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الشركة الملكية للتوصيل بين الضفتين</title>
+    <style>
+        /* التنسيقات العامة */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1a1a1a; padding: 15px; color: #333; }
+        .card { max-width: 500px; margin: auto; background: #ffffff; padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border-top: 5px solid #d4af37; }
+        
+        /* تنسيق الشعار النصي الجديد */
+        .logo-text { text-align: center; margin-bottom: 25px; padding: 10px; }
+        .logo-text h1 { 
+            color: #8e1b1b; 
+            font-size: 26px; 
+            margin: 0; 
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            border-bottom: 2px double #d4af37;
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+        .logo-subtitle { color: #d4af37; font-size: 14px; display: block; margin-top: 5px; font-weight: bold; }
+
+        h2 { color: #333; text-align: center; font-size: 18px; margin-top: 0; opacity: 0.8; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; background: #f9f9f9; font-size: 14px; }
+        
+        .hidden { display: none; }
+        
+        /* تنسيق قسم رقم الهاتف والدولة */
+        .phone-container { display: flex; gap: 10px; }
+        .phone-container select { flex: 1; }
+        .phone-container input { flex: 2; }
+
+        .agreement { background: #fff9e6; padding: 10px; border-radius: 8px; border: 1px solid #ffeeba; font-size: 13px; display: flex; align-items: flex-start; gap: 10px; }
+        .agreement input { width: auto; margin-top: 3px; }
+        
+        .btn-whatsapp { background: linear-gradient(45deg, #25D366, #128C7E); color: white; padding: 15px; border: none; border-radius: 10px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; margin-top: 20px; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3); transition: 0.3s; }
+        .btn-whatsapp:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(37, 211, 102, 0.4); }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="logo-text">
+        <h1>الشركة الملكية</h1>
+        <span class="logo-subtitle">للتوصيل بين الضفتين</span>
+    </div>
+
+    <h2>طلب توصيل جديد</h2>
+    
+    <div class="form-group">
+        <label>اسم المرسل:</label>
+        <input type="text" id="senderName" placeholder="الاسم الكامل">
+    </div>
+
+    <div class="form-group">
+        <label>الدولة ورقم الهاتف:</label>
+        <div class="phone-container">
+            <select id="countrySelect" onchange="toggleCountryField()">
+                <option value="+962">الأردن (+962)</option>
+                <option value="+970">فلسطين (+970)</option>
+                <option value="+972">إسرائيل (+972)</option>
+                <option value="other">أخرى</option>
+            </select>
+            <input type="tel" id="senderPhone" placeholder="رقم الهاتف">
+        </div>
+    </div>
+
+    <div id="customCountryGroup" class="form-group hidden">
+        <label>مفتاح الدولة (مثال: +44):</label>
+        <input type="text" id="customCountryCode" placeholder="+000">
+    </div>
+
+    <div class="form-group">
+        <label>نوع الشحنة:</label>
+        <select id="itemType" onchange="toggleOtherField()">
+            <option value="وثائق رسمية">وثائق رسمية</option>
+            <option value="طرد بريدي">طرد بريدي</option>
+            <option value="أخرى">أخرى (يرجى تحديد الوصف)</option>
+        </select>
+    </div>
+
+    <div id="otherDescriptionGroup" class="form-group hidden">
+        <label>وصف الشحنة:</label>
+        <textarea id="otherInfo" rows="2" placeholder="ماذا تريد أن تشحن؟"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label>جهة الدفع:</label>
+        <select id="paymentMethod">
+            <option value="المرسل">المرسل</option>
+            <option value="المستلم">المستلم</option>
+        </select>
+    </div>
+
+    <div class="agreement">
+        <input type="checkbox" id="agreeCheck">
+        <label for="agreeCheck">أقر بأن المعلومات التي أقدمها لطلبي صحيحة وأتحمل المسؤولية الكاملة عن دقتها.</label>
+    </div>
+
+    <button class="btn-whatsapp" id="submitBtn" onclick="prepareOrder()">إرسال الطلب عبر واتساب</button>
+</div>
+
+<script>
+    let userIP = "جاري الجلب...";
+    fetch('https://api.ipify.org?format=json')
+        .then(response => response.json())
+        .then(data => userIP = data.ip)
+        .catch(() => userIP = "غير معروف");
+
+    function toggleCountryField() {
+        const country = document.getElementById('countrySelect').value;
+        const customField = document.getElementById('customCountryGroup');
+        customField.style.display = (country === 'other') ? 'block' : 'none';
+    }
+
+    function toggleOtherField() {
+        const itemType = document.getElementById('itemType').value;
+        const otherField = document.getElementById('otherDescriptionGroup');
+        otherField.style.display = (itemType === 'أخرى') ? 'block' : 'none';
+    }
+
+    function prepareOrder() {
+        const isAgreed = document.getElementById('agreeCheck').checked;
+        if (!isAgreed) {
+            alert("يرجى الموافقة على إقرار صحة المعلومات أولاً.");
+            return;
+        }
+
+        const myNumber = "972592781400";
+        const sender = document.getElementById('senderName').value;
+        const phone = document.getElementById('senderPhone').value;
+        const countryCode = document.getElementById('countrySelect').value;
+        const customCode = document.getElementById('customCountryCode').value;
+        
+        const type = document.getElementById('itemType').value;
+        const otherDesc = document.getElementById('otherInfo').value;
+        const payment = document.getElementById('paymentMethod').value;
+
+        // التحقق من الحقول
+        if(!sender || !phone) {
+            alert("يرجى تعبئة الاسم ورقم الهاتف.");
+            return;
+        }
+        if(countryCode === 'other' && !customCode) {
+            alert("يرجى إدخال مفتاح الدولة.");
+            return;
+        }
+
+        // جلب الوقت والتاريخ الحالي
+        const now = new Date();
+        const dateTimeString = now.toLocaleDateString('ar-EG') + " | " + now.toLocaleTimeString('ar-EG');
+
+        // تحديد مفتاح الدولة النهائي
+        const finalCode = (countryCode === 'other') ? customCode : countryCode;
+
+        // بناء نص الرسالة
+        let message = `*طلب جديد - الشركة الملكية*%0A`;
+        message += `━━━━━━━━━━━━━━━%0A`;
+        message += `👤 *المرسل:* ${sender}%0A`;
+        message += `📞 *الهاتف:* ${finalCode} ${phone}%0A`;
+        message += `📦 *النوع:* ${type} ${type === 'أخرى' ? '(' + otherDesc + ')' : ''}%0A`;
+        message += `💰 *الدفع:* ${payment}%0A`;
+        message += `📅 *التوقيت:* ${dateTimeString}%0A`;
+        message += `🌐 *IP المرسل:* ${userIP}%0A`;
+        message += `━━━━━━━━━━━━━━━%0A`;
+        message += `✅ *تم الإقرار بصحة المعلومات*%0A`;
+
+        window.open(`https://wa.me/${myNumber}?text=${message}`, '_blank');
+    }
+</script>
+
+</body>
+</html>
